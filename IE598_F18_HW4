@@ -1,0 +1,100 @@
+import pandas as pd
+import numpy as np
+df = pd.read_excel('housing.xlsx')
+df.head()
+
+print('Number of rows of data:', df.shape[0])
+print('Number of cols of data:', df.shape[1])
+
+df.dropna(inplace=True)
+df.info()
+
+df.describe()
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+cols = ['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT', 'MEDV']
+sns.pairplot(df[cols], height=2.5)
+plt.tight_layout()
+plt.show()
+
+cm = np.corrcoef(df[cols].values.T)
+sns.set(font_scale=1.5)
+hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 15}, yticklabels=cols, xticklabels=cols)
+plt.gcf().set_size_inches(10, 10)
+plt.show()
+
+from sklearn.model_selection import train_test_split
+X=df.values[:,:13]
+y=df.values[:,13]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state=42)
+
+from sklearn.linear_model import LinearRegression 
+from sklearn.metrics import mean_squared_error
+reg = LinearRegression()
+reg.fit(X_train,y_train)
+y_test_reg_pred = reg.predict(X_test)
+y_train_reg_pred = reg.predict(X_train)
+
+def plot_residuals(y_train_pred,y_test_pred,y_train,y_test):
+    plt.scatter(y_train_pred,  y_train_pred - y_train, c='steelblue', marker='o', edgecolor='white', label='Training data')
+    plt.scatter(y_test_pred,  y_test_pred - y_test, c='limegreen', marker='s', edgecolor='white', label='Test data')
+    plt.xlabel('Predicted values')
+    plt.ylabel('Residuals')
+    plt.legend(loc='upper left')
+    plt.hlines(y=0, xmin=-10, xmax=50, color='black', lw=2)
+    plt.xlim([-10, 50])
+    plt.show()
+plot_residuals(y_train_reg_pred,y_test_reg_pred,y_train,y_test)
+
+print("lnr coefficients: {}".format(reg.coef_))
+print("lnr y intercept: {}".format(reg.intercept_))
+
+print(format(reg.score(X_test, y_test)))
+rmse = np.sqrt(mean_squared_error(y_test,y_test_reg_pred))
+print(format(rmse))
+
+from sklearn.model_selection import cross_val_score
+def best_alpha(X,y,method):
+    alpha_space = np.logspace(-4, 0, 50)
+    scores = []
+    for alpha in alpha_space:
+        method.alpha = alpha
+        cv_scores = cross_val_score(method,X,y,cv=10)
+        scores.append(np.mean(cv_scores))
+    return alpha_space[scores.index(max(scores))]
+    
+    from sklearn.linear_model import Lasso
+from sklearn.linear_model import Ridge
+lasso = Lasso(normalize=True)
+ridge = Ridge(normalize=True)
+alpha_lasso = best_alpha(X,y,lasso)
+alpha_ridge = best_alpha(X,y,ridge)
+print(format(alpha_lasso))
+print(format(alpha_ridge))
+
+ridge.alpha=alpha_ridge
+ridge.fit(X_train,y_train)
+y_test_ridge_pred = ridge.predict(X_test)
+y_train_ridge_pred = ridge.predict(X_train)
+print("ridge coefficients: {}".format(ridge.coef_))
+print("ridge y intercept: {}".format(ridge.intercept_))
+print("ridge R^2: {}".format(ridge.score(X_test, y_test)))
+ridge_rmse = np.sqrt(mean_squared_error(y_test,y_test_ridge_pred))
+print("ridge Root Mean Squared Error: {}".format(ridge_rmse))
+plot_residuals(y_train_ridge_pred,y_test_ridge_pred,y_train,y_test)
+
+lasso.alpha=alpha_lasso
+lasso.fit(X_train,y_train)
+y_test_lasso_pred = lasso.predict(X_test)
+y_train_lasso_pred = lasso.predict(X_train)
+print("lasso coefficients: {}".format(lasso.coef_))
+print("lasso y intercept: {}".format(lasso.intercept_))
+print("lasso R^2: {}".format(lasso.score(X_test, y_test)))
+lasso_rmse = np.sqrt(mean_squared_error(y_test,y_test_lasso_pred))
+print("ridge Root Mean Squared Error: {}".format(lasso_rmse))
+plot_residuals(y_train_lasso_pred,y_test_lasso_pred,y_train,y_test)
+
+print("My name is: Heze Liu")
+print("My NetID is: hezeliu2")
+print("I hereby certify that I have read the University policy on Academic Integrity and that I am not in violation.")
