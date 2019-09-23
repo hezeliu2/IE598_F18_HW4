@@ -50,9 +50,16 @@ plot_residuals(y_train_reg_pred,y_test_reg_pred,y_train,y_test)
 print("lnr coefficients: {}".format(reg.coef_))
 print("lnr y intercept: {}".format(reg.intercept_))
 
-print(format(reg.score(X_test, y_test)))
-rmse = np.sqrt(mean_squared_error(y_test,y_test_reg_pred))
-print(format(rmse))
+from sklearn.metrics import r2_score
+slr = LinearRegression()
+slr.fit(X_train,y_train)
+
+print('coefficient: ', slr.coef_)
+print('intercept: ', slr.intercept_)
+print('R2 training: ', slr.score(X_train, y_train))
+print('MSE training: ', mean_squared_error(slr.predict(X_train), y_train))
+print('R2 testing : ', slr.score(X_test, y_test))
+print('MSE testing : ', mean_squared_error(slr.predict(X_test), y_test))
 
 from sklearn.model_selection import cross_val_score
 def best_alpha(X,y,method):
